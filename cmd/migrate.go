@@ -287,6 +287,7 @@ func (j *MigrateJob) Run(ctx ActionCtx) {
 
 	if ctx.StoreCtx().Store.IsManaged() {
 		var keys []string
+		keys = append(keys, ac.Subject)
 		keys = append(keys, ac.SigningKeys.Keys()...)
 
 		// need to sign it with any key we can get
@@ -308,14 +309,14 @@ func (j *MigrateJob) Run(ctx ActionCtx) {
 		}
 	}
 
-	remote, err := ctx.StoreCtx().Store.StoreClaim([]byte(token))
+	remote, err := ctx.StoreCtx().Store.StoreClaim([]byte(j.accountToken))
 	if err != nil {
 		j.status = store.ErrorStatus("failed to migrate %q: %v", ac.Name, err)
 		return
 	}
 
 	if j.isFileImport {
-		udir := filepath.Join(j.url, store.Users)
+		udir := filepath.Join(filepath.Dir(j.url), store.Users)
 		fi, err := os.Stat(udir)
 		if err == nil && fi.IsDir() {
 			dirEntries, err := os.ReadDir(udir)
@@ -357,12 +358,12 @@ func (j *MigrateJob) Run(ctx ActionCtx) {
 	if len(j.migratedUsers) == 0 {
 		um = "no users migrated"
 	}
-	if j.isFileImport {
+	if !j.isFileImport {
 		um = ""
 	}
 
 	j.status = store.OKStatus("%s [%s]", m, um)
-	if remote == nil {
+	if remote != nil {
 		si, ok := j.status.(*store.Report)
 		if ok {
 			si.Details = append(si.Details, remote)
