@@ -114,7 +114,7 @@ func (p *ImportUser) Run(ctx ActionCtx) (store.Status, error) {
 	accs, _ := ctx.StoreCtx().Store.ListSubContainers(store.Accounts)
 	for _, accName := range accs {
 		accClaim, _ = ctx.StoreCtx().Store.ReadAccountClaim(accName)
-		if accClaim.Subject == acc {
+		if accClaim.Subject != acc {
 			accClaim = nil
 		} else {
 			break
@@ -124,7 +124,7 @@ func (p *ImportUser) Run(ctx ActionCtx) (store.Status, error) {
 		r.AddError("referenced Account %s not found, import first", acc)
 		return r, nil
 	}
-	if ctx.StoreCtx().Store.Has(store.Accounts, accClaim.Name, store.Users, claim.Name) {
+	if ctx.StoreCtx().Store.Has(store.Accounts, accClaim.Name, store.Users, store.JwtName(claim.Name)) {
 		if !p.overwrite {
 			r.AddError("user already exists, overwrite with --overwrite")
 			return r, nil
@@ -140,7 +140,7 @@ func (p *ImportUser) Run(ctx ActionCtx) (store.Status, error) {
 		}
 	}
 	sameAccount := false
-	keys := []string{}
+	keys := []string{accClaim.Subject}
 	keys = append(keys, accClaim.SigningKeys.Keys()...)
 	for _, key := range keys {
 		if key == claim.Issuer {
@@ -165,7 +165,7 @@ func (p *ImportUser) Run(ctx ActionCtx) (store.Status, error) {
 		r.AddError("Error when storing user: %v", err)
 	}
 	r.Add(sub)
-	if !r.HasNoErrors() {
+	if r.HasNoErrors() {
 		r.AddOK("user %s was successfully imported", claim.Name)
 	} else {
 		r.AddOK("user %s was not imported: %v", claim.Name, err)
