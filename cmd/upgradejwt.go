@@ -76,7 +76,7 @@ func upgradeOperator(cmd *cobra.Command, s *store.Store, rep *store.Report) {
 	}
 	opName := op.Name
 	// check for Version > 2 happens in root
-	if op.Version == 2 && !s.IsManaged() {
+	if op.Version == 2 {
 		rep.AddOK("Operator %s is already upgraded to version %d. No change was applied", opName, op.Version)
 		return
 	}
@@ -93,7 +93,7 @@ You need to contact "%s", obtain a V2 jwt and re issue the above command.
 	if ctx, err := s.GetContext(); err != nil {
 		rep.AddError("Loading Operator Context %s failed: %v", opName, err)
 	} else {
-		opKp, err = ctx.KeyStore.GetKeyPair(op.Name)
+		opKp, err = ctx.KeyStore.GetKeyPair(op.Subject)
 		if opKp == nil {
 			errString := "not found"
 			if err != nil {
@@ -108,9 +108,9 @@ If you intentionally removed it, you need to restore it for this command to work
 		return
 	}
 	if conv, _ := cliprompts.Confirm(cliprompts.WrapString(80, `It is advisable to create a backup of the store.
-Do you want to create a backup in the form of a zip file now?`), false); conv {
+Do you want to create a backup in the form of a zip file now?`), true); conv {
 		dir, _ := os.Getwd()
-		zipFileDefault := filepath.Join(dir, fmt.Sprintf("%s-upgrade-backup.zip", opName))
+		zipFileDefault := filepath.Join(dir, fmt.Sprintf("%s-jwtV1-upgrade-backup.zip", opName))
 		backupFile, err := cliprompts.Prompt("zip file name:", zipFileDefault)
 		if err != nil {
 			rep.AddError("Error obtaining file name")
