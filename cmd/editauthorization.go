@@ -196,12 +196,12 @@ func (p *EditAccountCalloutParams) Run(ctx ActionCtx) (store.Status, error) {
 	var curveReport []string
 
 	if !p.disable {
-		p.claim.Account.Authorization.AuthUsers.Add(p.AuthUsers...)
 		userReport = report(p.claim.Account.Authorization.AuthUsers,
 			p.AuthUsers,
 			"skipped adding user %q - as it's already set",
 			"added user %q")
 
+		p.claim.Account.Authorization.AuthUsers.Add(p.AuthUsers...)
 		accountReport = report(p.claim.Account.Authorization.AllowedAccounts,
 			p.AllowedAccounts,
 			"skipped adding account %q - as it's already set",
@@ -223,6 +223,7 @@ func (p *EditAccountCalloutParams) Run(ctx ActionCtx) (store.Status, error) {
 		if p.RmXKey {
 			old := p.claim.Account.Authorization.XKey
 			if old != "" {
+				p.claim.Account.Authorization.XKey = ""
 				curveReport = append(curveReport, fmt.Sprintf("removed %s curve key", old))
 			} else {
 				curveReport = append(curveReport, "remove curve key didn't do anything as the curve key was not set")
@@ -249,7 +250,7 @@ func (p *EditAccountCalloutParams) Run(ctx ActionCtx) (store.Status, error) {
 	var vr jwt.ValidationResults
 	p.claim.Validate(&vr)
 	errs := vr.Errors()
-	if len(errs) > 2 {
+	if len(errs) > 0 {
 		return nil, errs[0]
 	}
 
@@ -261,7 +262,7 @@ func (p *EditAccountCalloutParams) Run(ctx ActionCtx) (store.Status, error) {
 
 	r := store.NewDetailedReport(false)
 	StoreAccountAndUpdateStatus(ctx, token, r)
-	if !r.HasNoErrors() {
+	if r.HasNoErrors() {
 		for _, v := range userReport {
 			r.AddSimpleStatus(store.OK, v)
 		}
